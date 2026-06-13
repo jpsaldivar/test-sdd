@@ -136,33 +136,88 @@
       }
     }
 
-    async function loadTrack({ team, track, doc, section, mission, branch }) {
+    async function loadTrack(params) {
+      const { team, track, doc, section, mission, branch } = params;
       document.getElementById('nav-track-name').textContent = track;
-      const files = await api.listTrackFiles(team, track, mission, branch);
-      renderNav(files, doc, branch);
-      const activeDoc = doc || files[0];
-      const content = await api.getFileContent(team, track, activeDoc, mission, branch);
-      const { html, sections } = renderer.render(content);
-      document.getElementById('doc-body').innerHTML = html;
-      await renderer.renderMermaid();
-      await sidebar.load(team, track, sections);
-      if (section) sidebar.focusSection(section);
+
+      // Estructura del track (árbol de carpetas)
+      const structure = await api.getTrackStructure(team, track, branch);
+
+      // Determinar qué archivo mostrar
+      const activeMission = mission || null;
+      const activeDoc = doc || (activeMission
+        ? structure.missions.find(m => m.name === activeMission)?.files[0]
+        : structure.files[0]);
+
+      renderNavTree(track, structure, activeDoc, activeMission, branch);
+
+      if (activeDoc) {
+        const content = await api.getFileContent(team, track, activeDoc, activeMission, branch);
+        const { html, sections } = renderer.render(content);
+        document.getElementById('doc-body').innerHTML = html;
+        await renderer.renderMermaid();
+        await sidebar.load(team, track, sections);
+        if (section) sidebar.focusSection(section);
+      }
     }
 
-    function renderNav(files, activeDoc, branch) {
+    function renderNavTree(track, structure, activeDoc, activeMission, branch) {
       const list = document.getElementById('nav-doc-list');
-      list.innerHTML = files.map(f => `
-        <li class="${f === activeDoc ? 'active' : ''}">
-          <a href="#" data-doc="${f}">${f}</a>
-        </li>
-      `).join('');
-      list.querySelectorAll('a').forEach(a =>
+      list.innerHTML = '';
+
+      const params = router.getParams();
+
+      function makeFileItem(filename, mission) {
+        const li = document.createElement('li');
+        const isActive = filename === activeDoc && mission === activeMission;
+        li.className = isActive ? 'active' : '';
+        const a = document.createElement('a');
+        a.href = '#';
+        a.textContent = filename;
         a.addEventListener('click', e => {
           e.preventDefault();
-          router.setParam('doc', a.dataset.doc);
-          location.reload();
-        })
-      );
+          const p = new URLSearchParams(location.search);
+          p.set('doc', filename);
+          if (mission) p.set('mission', mission); else p.delete('mission');
+          p.delete('section');
+          location.search = p.toString();
+        });
+        li.appendChild(a);
+        return li;
+      }
+
+      // Archivos raíz del track
+      for (const f of structure.files) {
+        list.appendChild(makeFileItem(f, null));
+      }
+
+      // Carpetas de misiones
+      for (const m of structure.missions) {
+        const folder = document.createElement('li');
+        folder.className = 'nav-folder';
+
+        const isOpen = m.name === activeMission || (!activeMission && structure.files.length === 0);
+        const header = document.createElement('div');
+        header.className = `nav-folder-header ${isOpen ? 'open' : ''}`;
+        header.innerHTML = `<span class="nav-folder-arrow">${isOpen ? '▾' : '▸'}</span><span class="nav-folder-name">${m.name}</span>`;
+
+        const children = document.createElement('ul');
+        children.className = `nav-folder-children ${isOpen ? '' : 'collapsed'}`;
+        for (const f of m.files) {
+          children.appendChild(makeFileItem(f, m.name));
+        }
+
+        header.addEventListener('click', () => {
+          const opening = !header.classList.contains('open');
+          header.classList.toggle('open', opening);
+          header.querySelector('.nav-folder-arrow').textContent = opening ? '▾' : '▸';
+          children.classList.toggle('collapsed', !opening);
+        });
+
+        folder.appendChild(header);
+        folder.appendChild(children);
+        list.appendChild(folder);
+      }
     }
 
     boot();

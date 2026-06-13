@@ -34,6 +34,30 @@ export class GitHubApi {
   // ─── Contents ──────────────────────────────────────────────
 
   /**
+   * Devuelve la estructura completa del track:
+   * archivos .md en la raíz y misiones (subdirectorios NN_*) con sus archivos.
+   * @returns {{ files: string[], missions: { name: string, files: string[] }[] }}
+   */
+  async getTrackStructure(team, track, branch = null) {
+    const year = await this._resolveTrackYear(team, track, branch);
+    const ref  = branch ? `?ref=${encodeURIComponent(branch)}` : '';
+    const url  = `${API_BASE}/repos/${this.owner}/${this.repo}/contents/teams/${team}/tracks/${year}/${track}${ref}`;
+    const items = await this._cachedGet(`structure:${team}/${track}:${branch}`, url);
+
+    const files    = items.filter(i => i.type === 'file' && i.name.endsWith('.md')).map(i => i.name).sort(fileOrder);
+    const missionDirs = items.filter(i => i.type === 'dir' && /^\d{2}_/.test(i.name)).sort((a, b) => a.name.localeCompare(b.name));
+
+    const missions = await Promise.all(missionDirs.map(async dir => {
+      const mUrl  = `${API_BASE}/repos/${this.owner}/${this.repo}/contents/teams/${team}/tracks/${year}/${track}/${dir.name}${ref}`;
+      const mItems = await this._cachedGet(`structure:${team}/${track}/${dir.name}:${branch}`, mUrl);
+      const mFiles = mItems.filter(i => i.type === 'file' && i.name.endsWith('.md')).map(i => i.name).sort(fileOrder);
+      return { name: dir.name, files: mFiles };
+    }));
+
+    return { files, missions };
+  }
+
+  /**
    * Lista los archivos .md de un track (o misión) en orden de fase.
    * @param {string|null} branch - rama a leer; null = rama por defecto del repo
    */
