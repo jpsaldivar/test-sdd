@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDD · Spec-Driven Development @ Buk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a0b0f;
+      --bg2: #0f1117;
+      --bg3: #13151d;
+      --surface: #181b24;
+      --surface2: #1e2130;
+      --border: rgba(255, 255, 255, 0.07);
+      --border2: rgba(255, 255, 255, 0.12);
+      --text: #e8eaf0;
+      --text2: #8b90a0;
+      --text3: #555a6e;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.12);
+      --accent2: #10b981;
+      --red: #f43f5e;
+      --red-glow: rgba(244, 63, 94, 0.1);
+      --amber: #f59e0b;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', system-ui, sans-serif;
+      --r: 10px;
+      --rl: 14px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 11, 15, 0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2.5rem;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .nav-badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.6rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+
+    .nav-center {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 0.2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.78rem;
+      color: var(--text2);
+      text-decoration: none;
+      padding: 0.32rem 0.65rem;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+
+    .nav-links a:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .nav-links a.active {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .nav-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #fff;
+      text-decoration: none;
+      background: var(--accent);
+      padding: 0.38rem 0.9rem;
+      border-radius: 7px;
+      transition: opacity 0.15s, transform 0.15s;
+      white-space: nowrap;
+    }
+
+    .nav-github:hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+
+    .nav-github svg {
+      flex-shrink: 0;
+    }
+
+    .nav-hamburger {
+      display: none;
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--text2);
+      padding: 0.38rem 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      line-height: 1;
+      font-size: 1rem;
+      transition: background 0.15s;
+    }
+
+    .nav-hamburger:hover {
+      background: var(--surface);
+    }
+
+    .nav-mobile-menu {
+      display: none;
+      position: fixed;
+      top: 58px;
+      left: 0;
+      right: 0;
+      background: rgba(10, 11, 15, 0.97);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem 1.5rem;
+      z-index: 99;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .nav-mobile-menu.open {
+      display: flex;
+    }
+
+    .nav-mobile-menu a {
+      font-size: 0.9rem;
+      color: var(--text2);
+      text-decoration: none;
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-mobile-menu a:hover {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .nav-mobile-menu .nav-github-mobile {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--accent);
+      color: #fff;
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+
+    .nav-mobile-menu .nav-github-mobile:hover {
+      opacity: 0.9;
+      background: var(--accent);
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 90vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      left: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -100px;
+      right: 10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-left {
+      padding: 6rem 4rem 4rem 5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-right: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.75rem;
+      background: var(--accent-glow);
+      border: 1px solid rgba(99, 102, 241, 0.22);
+      padding: 0.28rem 0.75rem;
+      border-radius: 20px;
+      width: fit-content;
+    }
+
+    .hero-eyebrow-dot {
+      width: 5px;
+      height: 5px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: scale(0.8)
+      }
+    }
+
+    .hero-title {
+      font-size: clamp(2.6rem, 4.5vw, 4.8rem);
+      font-weight: 600;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+      color: #f0f2f8;
+    }
+
+    .hero-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-desc {
+      font-size: 0.98rem;
+      color: var(--text2);
+      max-width: 40ch;
+      line-height: 1.75;
+      margin-bottom: 2.5rem;
+      font-weight: 300;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #fff;
+      text-decoration: none;
+      background: var(--accent);
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      transition: opacity 0.2s, transform 0.2s;
+      width: fit-content;
+    }
+
+    .hero-cta:hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+
+    .hero-right {
+      padding: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-diagram {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .flow-chain {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .flow-node {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 1rem;
+      align-items: start;
+      opacity: 0;
+      transform: translateX(16px);
+      animation: slideIn 0.45s forwards;
+    }
+
+    .flow-node:nth-child(1) {
+      animation-delay: 0.1s
+    }
+
+    .flow-node:nth-child(2) {
+      animation-delay: 0.2s
+    }
+
+    .flow-node:nth-child(3) {
+      animation-delay: 0.3s
+    }
+
+    .flow-node:nth-child(4) {
+      animation-delay: 0.4s
+    }
+
+    .flow-node:nth-child(5) {
+      animation-delay: 0.5s
+    }
+
+    .flow-node:nth-child(6) {
+      animation-delay: 0.6s
+    }
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .flow-num-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .flow-num {
+      width: 34px;
+      height: 34px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      font-weight: 500;
+      color: var(--text2);
+      flex-shrink: 0;
+    }
+
+    .flow-node.active .flow-num {
+      background: var(--accent-glow);
+      border-color: rgba(99, 102, 241, 0.35);
+      color: #a5b4fc;
+    }
+
+    .flow-line {
+      width: 1px;
+      flex: 1;
+      min-height: 20px;
+      background: linear-gradient(to bottom, var(--border2), transparent);
+      margin: 3px 0;
+    }
+
+    .flow-content {
+      padding-bottom: 1.2rem;
+    }
+
+    .flow-role {
+      font-size: 0.63rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 0.15rem;
+    }
+
+    .flow-content h4 {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+
+    .flow-content p {
+      font-size: 0.75rem;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+
+    .flow-tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      margin-top: 0.35rem;
+      font-weight: 500;
+      background: var(--surface2);
+      color: var(--text3);
+      border: 1px solid var(--border);
+    }
+
+    .flow-tag.red {
+      background: var(--red-glow);
+      color: #fda4af;
+      border-color: rgba(244, 63, 94, 0.18);
+    }
+
+    .flow-tag.blue {
+      background: var(--accent-glow);
+      color: #a5b4fc;
+      border-color: rgba(99, 102, 241, 0.18);
+    }
+
+    .flow-tag.adr {
+      background: rgba(245, 158, 11, 0.1);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    /* MARQUEE */
+    .marquee-wrap {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      padding: 0.7rem 0;
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 2.5rem;
+      width: max-content;
+      animation: marquee 35s linear infinite;
+    }
+
+    @keyframes marquee {
+      from {
+        transform: translateX(0)
+      }
+
+      to {
+        transform: translateX(-50%)
+      }
+    }
+
+    .marquee-item {
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      color: var(--text3);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+    }
+
+    .marquee-item::after {
+      content: '·';
+      color: var(--border2);
+    }
+
+    /* SECTION */
+    .section {
+      padding: 5.5rem 5rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .section-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 5rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .section-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    .section-breadcrumb .sep {
+      color: var(--border2);
+    }
+
+    .section-breadcrumb .current {
+      color: var(--accent);
+    }
+
+    .section-anchor {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text3);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 5px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .section-anchor:hover {
+      background: var(--surface);
+      color: var(--text2);
+    }
+
+    .section-header {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 4rem;
+      margin-bottom: 3.5rem;
+      align-items: start;
+    }
+
+    .section-num {
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      padding-top: 0.6rem;
+      font-weight: 500;
+    }
+
+    .section-title {
+      font-size: clamp(1.75rem, 3vw, 2.8rem);
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: #f0f2f8;
+    }
+
+    .section-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-subtitle {
+      font-size: 0.93rem;
+      color: var(--text2);
+      line-height: 1.75;
+      margin-top: 0.75rem;
+      font-weight: 300;
+    }
+
+    /* PROBLEM/SOLUTION */
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .split-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      padding: 2rem;
+    }
+
+    .split-panel.danger {
+      border-color: rgba(244, 63, 94, 0.14);
+    }
+
+    .split-panel.success {
+      border-color: rgba(16, 185, 129, 0.14);
+    }
+
+    .split-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .split-label.red {
+      color: var(--red);
+    }
+
+    .split-label.green {
+      color: var(--accent2);
+    }
+
+    .pain-list,
+    .gain-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .pain-list li,
+    .gain-list li {
+      display: grid;
+      grid-template-columns: 1.5rem 1fr;
+      gap: 0.6rem;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--text2);
+    }
+
+    .pain-list .icon {
+      color: var(--red);
+      padding-top: 0.1rem;
+    }
+
+    .gain-list .icon {
+      color: var(--accent2);
+      padding-top: 0.1rem;
+    }
+
+    /* CALLOUT */
+    .callout {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.04), rgba(6, 182, 212, 0.04));
+      border: 1px solid rgba(99, 102, 241, 0.18);
+      border-left: 3px solid var(--accent);
+      padding: 1.25rem 1.75rem;
+      border-radius: 0 var(--r) var(--r) 0;
+      margin: 2rem 0;
+    }
+
+    .callout p {
+      font-size: 0.93rem;
+      color: var(--text);
+      line-height: 1.7;
+      font-weight: 300;
+      font-style: italic;
+    }
+
+    .callout cite {
+      display: block;
+      margin-top: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      font-style: normal;
+      color: var(--text3);
+      letter-spacing: 0.06em;
+    }
+
+    /* LIFECYCLE */
+    .lifecycle-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      overflow: hidden;
+    }
+
+    .lifecycle-step {
+      background: var(--surface);
+      padding: 2rem 1.75rem;
+      transition: background 0.2s;
+      cursor: default;
+    }
+
+    .lifecycle-step:hover {
+      background: var(--surface2);
+    }
+
+    .step-n {
+      font-family: var(--mono);
+      font-size: 2.5rem;
+      font-weight: 600;
+      color: var(--border2);
+      line-height: 1;
+      margin-bottom: 1.25rem;
+      letter-spacing: -0.02em;
+      transition: color 0.2s;
+    }
+
+    .lifecycle-step:hover .step-n {
+      color: var(--accent);
+    }
+
+    .step-status {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      font-weight: 500;
+      padding: 0.18rem 0.55rem;
+      border-radius: 4px;
+      margin-bottom: 0.9rem;
+      letter-spacing: 0.06em;
+    }
+
+    .lifecycle-step:nth-child(1) .step-status {
+      background: rgba(99, 102, 241, 0.1);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .lifecycle-step:nth-child(2) .step-status {
+      background: rgba(245, 158, 11, 0.1);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .lifecycle-step:nth-child(3) .step-status {
+      background: rgba(6, 182, 212, 0.1);
+      color: #67e8f9;
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+
+    .lifecycle-step:nth-child(4) .step-status {
+      background: rgba(16, 185, 129, 0.1);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .lifecycle-step h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .lifecycle-step p {
+      font-size: 0.8rem;
+      color: var(--text2);
+      line-height: 1.55;
+      font-weight: 300;
+    }
+
+    .step-files {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .step-file {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .step-file::before {
+      content: '↳';
+      color: var(--border2);
+    }
+
+    /* METRICS */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .metric-cell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+
+    .metric-cell:hover {
+      border-color: var(--border2);
+    }
+
+    .metric-num {
+      font-size: 4.5rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .metric-num.blue {
+      background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .metric-num.green {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .metric-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-desc {
+      font-size: 0.8rem;
+      color: var(--text2);
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    /* ROLES TABLE */
+    .roles-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      overflow: hidden;
+    }
+
+    .roles-table th {
+      text-align: left;
+      padding: 0.9rem 1.25rem;
+      font-size: 0.63rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .roles-table td {
+      padding: 0.9rem 1.25rem;
+      font-size: 0.83rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+    }
+
+    .roles-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .roles-table tbody tr:hover td {
+      background: var(--surface2);
+    }
+
+    .role-name {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+
+    .role-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.1);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.18);
+      font-weight: 500;
+    }
+
+    /* AGENTS */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      padding: 1.75rem;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .agent-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .agent-card:hover {
+      border-color: var(--border2);
+      background: var(--surface2);
+    }
+
+    .agent-card:hover::before {
+      opacity: 1;
+    }
+
+    .agent-type {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 0.75rem;
+    }
+
+    .agent-card h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .agent-card p {
+      font-size: 0.82rem;
+      color: var(--text2);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      font-weight: 300;
+    }
+
+    .agent-model {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: #a5b4fc;
+      background: var(--accent-glow);
+      border: 1px solid rgba(99, 102, 241, 0.18);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      width: fit-content;
+      font-weight: 500;
+    }
+
+    .agent-trigger {
+      font-size: 0.75rem;
+      color: var(--text3);
+      padding-top: 0.75rem;
+      margin-top: 0.75rem;
+      border-top: 1px solid var(--border);
+      line-height: 1.5;
+    }
+
+    /* ADR LEVELS */
+    .adr-levels {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+    }
+
+    .adr-level {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      transition: border-color 0.2s;
+    }
+
+    .adr-level:hover {
+      border-color: var(--border2);
+    }
+
+    .adr-scope {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    .adr-level h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .adr-path {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent);
+      word-break: break-all;
+      line-height: 1.5;
+      background: var(--accent-glow);
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid rgba(99, 102, 241, 0.14);
+    }
+
+    .adr-desc {
+      font-size: 0.78rem;
+      color: var(--text2);
+      font-weight: 300;
+      line-height: 1.55;
+    }
+
+    /* CODE BLOCK */
+    .code-block {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.75;
+      padding: 1.75rem 2rem;
+      overflow-x: auto;
+      color: #7b849a;
+      white-space: pre;
+    }
+
+    .code-block .kw {
+      color: #a5b4fc;
+    }
+
+    .code-block .str {
+      color: #6ee7b7;
+    }
+
+    .code-block .cm {
+      color: #3a3f55;
+    }
+
+    .code-block .hl {
+      color: #fcd34d;
+    }
+
+    /* READING GRID */
+    .reading-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      overflow: hidden;
+      counter-reset: read;
+    }
+
+    .read-item {
+      background: var(--surface);
+      padding: 1.25rem;
+      counter-increment: read;
+      transition: background 0.15s;
+      position: relative;
+      padding-top: 1.5rem;
+    }
+
+    .read-item:hover {
+      background: var(--surface2);
+    }
+
+    .read-item::before {
+      content: counter(read);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-glow);
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      margin-bottom: 0.6rem;
+    }
+
+    .read-file {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+
+    .read-note {
+      font-size: 0.72rem;
+      color: var(--text2);
+      font-weight: 300;
+      line-height: 1.5;
+    }
+
+    /* WORKFLOW TIMELINE */
+    .workflow-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      overflow: hidden;
+      margin-top: 2.5rem;
+    }
+
+    .wf-row {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      background: var(--surface);
+    }
+
+    .wf-phase {
+      padding: 1.35rem 1.5rem;
+      background: var(--bg3);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .wf-phase-name {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 0.2rem;
+    }
+
+    .wf-phase-role {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .wf-content {
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .wf-item {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      font-weight: 500;
+    }
+
+    .wf-item.output {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+    }
+
+    .wf-item.gate {
+      background: rgba(245, 158, 11, 0.07);
+      border-color: rgba(245, 158, 11, 0.18);
+      color: #fcd34d;
+    }
+
+    .wf-arrow {
+      color: var(--text3);
+      font-size: 0.75rem;
+    }
+
+    /* SKILLS */
+    .skills-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      overflow: hidden;
+    }
+
+    .skill-row {
+      display: grid;
+      grid-template-columns: 270px 1fr auto;
+      background: var(--surface);
+      transition: background 0.15s;
+    }
+
+    .skill-row:hover {
+      background: var(--surface2);
+    }
+
+    .skill-cmd {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 1.1rem 1.25rem;
+      border-right: 1px solid var(--border);
+      color: var(--accent2);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+    }
+
+    .skill-desc {
+      font-size: 0.83rem;
+      padding: 1.1rem 1.5rem;
+      color: var(--text2);
+      font-weight: 300;
+      display: flex;
+      align-items: center;
+    }
+
+    .skill-agent {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      padding: 1.1rem 1.25rem;
+      border-left: 1px solid var(--border);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 2.5rem 5rem;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .footer-left p {
+      font-size: 0.8rem;
+      color: var(--text3);
+    }
+
+    .footer-left p:first-child {
+      color: var(--text2);
+      font-weight: 500;
+      margin-bottom: 0.2rem;
+    }
+
+    .footer-nav {
+      display: flex;
+      gap: 0.2rem;
+      list-style: none;
+    }
+
+    .footer-nav a {
+      font-size: 0.78rem;
+      color: var(--text3);
+      text-decoration: none;
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .footer-nav a:hover {
+      background: var(--surface);
+      color: var(--text2);
+    }
+
+    .full-width {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .full-width .section {
+      border-bottom: none;
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.55s, transform 0.55s;
+    }
+
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 960px) {
+      .hero {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .hero-left {
+        padding: 3.5rem 2rem;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .hero-right {
+        padding: 2rem;
+      }
+
+      .section {
+        padding: 3rem 1.5rem;
+      }
+
+      .section-header {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .lifecycle-grid,
+      .adr-levels,
+      .metrics-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .agents-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .reading-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .wf-row {
+        grid-template-columns: 1fr;
+      }
+
+      .wf-phase {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .split-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .skill-row {
+        grid-template-columns: 1fr;
+      }
+
+      .skill-cmd,
+      .skill-agent {
+        border: none;
+        padding: 0.5rem 1rem;
+      }
+
+      .skill-desc {
+        padding: 0.25rem 1rem 0.75rem;
+      }
+
+      footer {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-center {
+        display: none;
+      }
+
+      .nav-hamburger {
+        display: flex;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <a class="nav-logo" href="#"><span class="nav-badge">SDD</span> Buk Engineering</a>
+    <div class="nav-center">
+      <ul class="nav-links">
+        <li><a href="#why">Por qué</a></li>
+        <li><a href="#lifecycle">Ciclo de vida</a></li>
+        <li><a href="#roles">Roles</a></li>
+        <li><a href="#agents">Agentes</a></li>
+        <li><a href="#workflow">Flujo</a></li>
+        <li><a href="#adrs">ADRs</a></li>
+        <li><a href="#quickstart">Comandos</a></li>
+      </ul>
+    </div>
+    <div class="nav-right">
+      <a class="nav-github" href="https://github.com/bukhr/sdd-buk-docs/" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path
+            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+        </svg>
+        Ver repositorio
+      </a>
+      <button class="nav-hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+    </div>
+  </nav>
+  <div class="nav-mobile-menu" id="mobile-menu" role="navigation" aria-label="Menú móvil">
+    <a href="#why">01 — Por qué</a>
+    <a href="#lifecycle">02 — Ciclo de vida</a>
+    <a href="#roles">03 — Roles</a>
+    <a href="#agents">04 — Agentes</a>
+    <a href="#workflow">05 — Flujo completo</a>
+    <a href="#adrs">06 — ADRs</a>
+    <a href="#quickstart">08 — Comandos rápidos</a>
+    <a class="nav-github-mobile" href="https://github.com/bukhr/sdd-buk-docs/" target="_blank" rel="noopener"><svg
+        width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+      </svg>Ver repositorio en GitHub</a>
+  </div>
+
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow"><span class="hero-eyebrow-dot"></span>Spec-Driven Development</div>
+      <h1 class="hero-title">Del problema<br>de negocio<br>al <em>código</em><br>con trazabilidad</h1>
+      <p class="hero-desc">SDD es el proceso por el cual los equipos de Buk convierten requisitos en código usando specs
+        como fuente de verdad compartida entre producto, arquitectura y desarrollo.</p>
+      <a class="hero-cta" href="#lifecycle">Ver el ciclo de vida <svg width="16" height="16" viewBox="0 0 16 16"
+          fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg></a>
+    </div>
+    <div class="hero-right">
+      <div class="hero-diagram">
+        <div class="flow-chain">
+          <div class="flow-node active">
+            <div class="flow-num-col">
+              <div class="flow-num">PM</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-role">Producto</div>
+              <h4>spec-track.md</h4>
+              <p>Define el problema, goals y métricas de éxito.</p><span class="flow-tag red">negocio</span>
+            </div>
+          </div>
+          <div class="flow-node">
+            <div class="flow-num-col">
+              <div class="flow-num">ARQ</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-role">Arquitecto</div>
+              <h4>track.md + ADR/</h4>
+              <p>Contexto técnico, entidades de dominio, mapa de misiones.</p><span class="flow-tag blue">técnico</span>
+            </div>
+          </div>
+          <div class="flow-node">
+            <div class="flow-num-col">
+              <div class="flow-num">PM</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-role">Producto</div>
+              <h4>spec-mission.md</h4>
+              <p>Objetivo, user stories y criterios de aceptación.</p><span class="flow-tag red">negocio</span>
+            </div>
+          </div>
+          <div class="flow-node">
+            <div class="flow-num-col">
+              <div class="flow-num">CHM</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-role">Champion</div>
+              <h4>1_mission.md + 2_jira-cards.md</h4>
+              <p>Escenarios Given/When/Then, cards y estimaciones. Decisiones técnicas de la misión se documentan en
+                ADR/ antes de implementar.</p><span class="flow-tag blue">técnico</span><span class="flow-tag adr">ADR/
+                misión</span>
+            </div>
+          </div>
+          <div class="flow-node">
+            <div class="flow-num-col">
+              <div class="flow-num">AGT</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-role">Agente Ejecutor</div>
+              <h4>Implementación en buk-webapp</h4>
+              <p>Claude implementa historia a historia. Abre draft PR.</p><span class="flow-tag">status:
+                in-progress</span>
+            </div>
+          </div>
+          <div class="flow-node">
+            <div class="flow-num-col">
+              <div class="flow-num">CHM</div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-role">Champion</div>
+              <h4>3_summary.md → done</h4>
+              <p>Summary actualizado. Misión cerrada con trazabilidad completa.</p><span class="flow-tag">status:
+                done</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span class="marquee-item">spec-track.md</span><span class="marquee-item">track.md</span><span
+        class="marquee-item">spec-mission.md</span><span class="marquee-item">1_mission.md</span><span
+        class="marquee-item">2_jira-cards.md</span><span class="marquee-item">3_summary.md</span><span
+        class="marquee-item">ADR</span><span class="marquee-item">track-summary.md</span><span
+        class="marquee-item">draft → ready → in-progress → done</span><span class="marquee-item">Given / When /
+        Then</span><span class="marquee-item">buk-webapp</span><span class="marquee-item">spec-track.md</span><span
+        class="marquee-item">track.md</span><span class="marquee-item">spec-mission.md</span><span
+        class="marquee-item">1_mission.md</span><span class="marquee-item">2_jira-cards.md</span><span
+        class="marquee-item">3_summary.md</span><span class="marquee-item">ADR</span><span
+        class="marquee-item">track-summary.md</span><span class="marquee-item">draft → ready → in-progress →
+        done</span><span class="marquee-item">Given / When / Then</span><span class="marquee-item">buk-webapp</span>
+    </div>
+  </div>
+
+  <div class="full-width" id="why">
+    <div class="section-top">
+      <div class="section-breadcrumb"><span>SDD</span><span class="sep">/</span><span class="current">Por qué</span>
+      </div><a class="section-anchor" href="https://github.com/bukhr/sdd-buk-docs/" target="_blank" rel="noopener"><svg
+          width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+        </svg>bukhr/sdd-buk-docs</a>
+    </div>
+    <div class="section fade-up">
+      <div class="section-header">
+        <div class="section-num">01 — Problema</div>
+        <div>
+          <h2 class="section-title">El proceso ya existe.<br>El <em>formato</em> es el problema</h2>
+          <p class="section-subtitle">Los equipos de Buk ya documentan decisiones y tienen ownership definido. El
+            problema no es la cultura — es que Google Docs no es un formato que la IA pueda consumir de manera
+            confiable, estructurada y revisada.</p>
+        </div>
+      </div>
+
+      <div class="split-grid">
+        <div class="split-panel danger">
+          <div class="split-label red">Hoy — Google Docs</div>
+          <ul class="pain-list">
+            <li><span class="icon">✕</span><span>El contexto existe pero es caro de consumir. Cada desarrollador pasa a
+                la IA lo que estima necesario, sin que ese recorte haya sido revisado.</span></li>
+            <li><span class="icon">✕</span><span>La información no está unificada. Un doc puede tener la decisión
+                correcta pero el agente nunca la verá si el dev no la incluyó en su prompt.</span></li>
+            <li><span class="icon">✕</span><span>Los docs crecen. Con el tiempo, leer el contexto completo de un feature
+                se vuelve una carga real — tanto para personas como para la IA.</span></li>
+            <li><span class="icon">✕</span><span>El ownership y las decisiones existen en el doc, pero no hay un
+                contrato claro de qué lee quién antes de implementar.</span></li>
+            <li><span class="icon">✕</span><span>Trabajar con IA desde un doc largo es difícil de estandarizar. Cada dev
+                tiene su propia forma de resumir y pasar contexto.</span></li>
+          </ul>
+        </div>
+        <div class="split-panel success">
+          <div class="split-label green">Con SDD — Markdown en Git</div>
+          <ul class="gain-list">
+            <li><span class="icon">✓</span><span>El contexto está dividido en archivos con propósito único. El agente
+                sabe exactamente qué leer y en qué orden — sin depender de cada dev.</span></li>
+            <li><span class="icon">✓</span><span>El recorte de contexto es parte del diseño, no del criterio individual.
+                Las dependencias entre misiones determinan qué se carga y qué no.</span></li>
+            <li><span class="icon">✓</span><span>Los archivos son pequeños por convención. Un 1_mission.md bien escrito
+                es denso pero acotado — fácil de leer para personas y para la IA.</span></li>
+            <li><span class="icon">✓</span><span>Ownership y reviewers definidos en cada archivo. La revisión ocurre
+                antes de que el agente ejecute, no después.</span></li>
+            <li><span class="icon">✓</span><span>El flujo de contexto es reproducible. Cualquier dev — o agente — que
+                siga el orden de lectura llega al mismo punto de partida.</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:2rem;margin-bottom:0">
+        <p>El problema no es la falta de documentación — es que el formato actual no fue diseñado para ser consumido por
+          agentes de IA de forma estructurada, predecible y revisada.</p><cite>El contexto no solo es caro para la IA,
+          sino también para cada desarrollador</cite>
+      </div>
+    </div>
+  </div>
+
+  <div class="full-width" id="lifecycle">
+    <div class="section-top">
+      <div class="section-breadcrumb"><span>SDD</span><span class="sep">/</span><span class="current">Ciclo de
+          vida</span></div><a class="section-anchor" href="#lifecycle">02</a>
+    </div>
+    <div class="section fade-up">
+      <div class="section-header">
+        <div class="section-num">02 — Ciclo de vida</div>
+        <div>
+          <h2 class="section-title">Cuatro estados, <em>un camino</em></h2>
+          <p class="section-subtitle">Una misión nace como borrador y muere como código en producción. El estado es un
+            campo en el archivo — siempre visible, siempre honesto.</p>
+        </div>
+      </div>
+      <div class="lifecycle-grid">
+        <div class="lifecycle-step">
+          <div class="step-n">01</div>
+          <div class="step-status">draft</div>
+          <h3>Definición</h3>
+          <p>La spec se escribe y revisa. PM define el negocio; Champion traduce al técnico. No hay código todavía.</p>
+          <div class="step-files"><span class="step-file">spec-mission.md</span><span
+              class="step-file">1_mission.md</span><span class="step-file">2_jira-cards.md</span></div>
+        </div>
+        <div class="lifecycle-step">
+          <div class="step-n">02</div>
+          <div class="step-status">ready</div>
+          <h3>Aprobación</h3>
+          <p>EM y Arquitecto aprueban 1_mission.md. Cards creadas en Jira. El agente puede arrancar.</p>
+          <div class="step-files"><span class="step-file">Cards en Jira</span><span class="step-file">Status: ready en
+              1_mission.md</span></div>
+        </div>
+        <div class="lifecycle-step">
+          <div class="step-n">03</div>
+          <div class="step-status">in-progress</div>
+          <h3>Ejecución</h3>
+          <p>El agente ejecutor lee el stack de specs e implementa historia a historia. Si hay decisión técnica, crea
+            ADR.</p>
+          <div class="step-files"><span class="step-file">Código en buk-webapp</span><span class="step-file">ADR/ (si
+              aplica)</span><span class="step-file">Draft PR</span></div>
+        </div>
+        <div class="lifecycle-step">
+          <div class="step-n">04</div>
+          <div class="step-status">done</div>
+          <h3>Cierre</h3>
+          <p>Given/When/Then verificados. 3_summary.md actualizado. PR mergeado. Misión cerrada con trazabilidad
+            completa.</p>
+          <div class="step-files"><span class="step-file">3_summary.md</span><span class="step-file">Status:
+              done</span><span class="step-file">track-summary.md (al cerrar track)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="full-width">
+    <div class="section fade-up">
+      <div class="metrics-grid">
+        <div class="metric-cell">
+          <div class="metric-num">2</div>
+          <div class="metric-label">Documentos por capa</div>
+          <p class="metric-desc">Negocio y técnico siempre separados. El PM no escribe código, el dev no escribe
+            requisitos.</p>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-num blue">4</div>
+          <div class="metric-label">Niveles de ADR</div>
+          <p class="metric-desc">Global → equipo → track → misión. Decisiones en el nivel más bajo que aplique.</p>
+        </div>
+        <div class="metric-cell">
+          <div class="metric-num green">6</div>
+          <div class="metric-label">Agentes disponibles</div>
+          <p class="metric-desc">Investigación, armado, ejecutor, orquestador, arquitecto y cloud architect.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="full-width" id="roles">
+    <div class="section-top">
+      <div class="section-breadcrumb"><span>SDD</span><span class="sep">/</span><span class="current">Roles</span></div>
+      <a class="section-anchor" href="#roles">03</a>
+    </div>
+    <div class="section fade-up">
+      <div class="section-header">
+        <div class="section-num">03 — Roles</div>
+        <div>
+          <h2 class="section-title">Cada archivo tiene un <em>dueño</em></h2>
+          <p class="section-subtitle">La responsabilidad de cada documento está asignada. Saber quién escribe y quién
+            aprueba elimina ambigüedad y acelera el proceso de revisión.</p>
+        </div>
+      </div>
+      <table class="roles-table">
+        <thead>
+          <tr>
+            <th>Rol</th>
+            <th>Owner de</th>
+            <th>Reviewer de</th>
+            <th>Aprueba antes de</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="role-name">PM</span></td>
+            <td>spec-track.md · spec-mission.md</td>
+            <td>—</td>
+            <td>Que el Arquitecto empiece track.md</td>
+          </tr>
+          <tr>
+            <td><span class="role-name">Arquitecto del track</span></td>
+            <td>track.md · ADR/ de track</td>
+            <td>1_mission.md</td>
+            <td>Que el Champion empiece 1_mission.md</td>
+          </tr>
+          <tr>
+            <td><span class="role-name">Champion</span></td>
+            <td>1_mission.md · 2_jira-cards.md · 3_summary.md · ADR/ de misión</td>
+            <td>—</td>
+            <td>Que el agente ejecute</td>
+          </tr>
+          <tr>
+            <td><span class="role-name">EM</span></td>
+            <td>—</td>
+            <td>track.md · 1_mission.md · 3_summary.md</td>
+            <td>Que la misión pase a <code class="role-badge">ready</code></td>
+          </tr>
+          <tr>
+            <td><span class="role-name">Stakeholders</span></td>
+            <td>—</td>
+            <td>spec-track.md</td>
+            <td>Que el track avance a definición técnica</td>
+          </tr>
+          <tr>
+            <td><span class="role-name">Agente Ejecutor</span></td>
+            <td>—</td>
+            <td>—</td>
+            <td>Implementa cuando Status = <code class="role-badge">ready</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="full-width" id="agents">
+    <div class="section-top">
+      <div class="section-breadcrumb"><span>SDD</span><span class="sep">/</span><span class="current">Agentes</span>
+      </div><a class="section-anchor" href="#agents">04</a>
+    </div>
+    <div class="section fade-up">
+      <div class="section-header">
+        <div class="section-num">04 — Agentes</div>
+        <div>
+          <h2 class="section-title">IA que lee las specs,<br>no que las <em>inventa</em></h2>
+          <p class="section-subtitle">Los agentes no improvisan. Leen el contexto en orden definido, preguntan antes de
+            actuar, y producen artefactos que quedan versionados en el repo.</p>
+        </div>
+      </div>
+      <div class="agents-grid">
+        <div class="agent-card">
+          <div class="agent-type">Flujo · Entrada</div>
+          <h3>Orquestador</h3>
+          <p>Punto de entrada por defecto. Lee el estado del track y decide qué agente invocar a continuación con el
+            prompt exacto.</p>
+          <div class="agent-model">Haiku · Bajo costo</div>
+          <div class="agent-trigger">Cuándo: no sé qué sigue en el track</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-type">Flujo · Track</div>
+          <h3>Investigación</h3>
+          <p>Explora el codebase de buk-webapp y genera borradores de spec-track.md + track.md desde la descripción del
+            problema.</p>
+          <div class="agent-model">Sonnet</div>
+          <div class="agent-trigger">Cuándo: nuevo track, antes de abrir PRs</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-type">Flujo · Misión</div>
+          <h3>Armado</h3>
+          <p>Genera spec-mission.md + 1_mission.md + 2_jira-cards.md con Execution Map Mermaid y estimaciones.</p>
+          <div class="agent-model">Sonnet</div>
+          <div class="agent-trigger">Cuándo: nueva misión, antes de abrir PRs</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-type">Flujo · Ejecución</div>
+          <h3>Ejecutor</h3>
+          <p>Implementa historia a historia leyendo el stack completo de specs. Si surge una decisión técnica, crea el
+            ADR y actualiza 1_mission.md.</p>
+          <div class="agent-model">Sonnet / Opus (refactors)</div>
+          <div class="agent-trigger">Cuándo: misión en status ready</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-type">Demanda · Arquitectura</div>
+          <h3>Arquitecto</h3>
+          <p>Analiza consistencia de ADRs, busca definiciones técnicas en el codebase, y genera nuevos ADRs con
+            alternativas y consecuencias.</p>
+          <div class="agent-model">Opus · 3 modos</div>
+          <div class="agent-trigger">Cuándo: decisión técnica que necesita documentarse</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-type">Demanda · Infraestructura</div>
+          <h3>Cloud Architect</h3>
+          <p>Evalúa blast radius de cambios de infra, diseña arquitecturas AWS-first, revisa IaC
+            (Terraform/CloudFormation) y genera ADRs cloud.</p>
+          <div class="agent-model">Opus · 5 modos</div>
+          <div class="agent-trigger">Cuándo: cambio de infra significativo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="full-width" id="workflow">
+    <div class="section-top">
+      <div class="section-breadcrumb"><span>SDD</span><span class="sep">/</span><span class="current">Flujo
+          completo</span></div><a class="section-anchor" href="#workflow">05</a>
+    </div>
+    <div class="section fade-up">
+      <div class="section-header">
+        <div class="section-num">05 — Flujo completo</div>
+        <div>
+          <h2 class="section-title">El orden de lectura <em>importa</em></h2>
+          <p class="section-subtitle">Antes de escribir una línea de código, el agente lee el contexto en este orden
+            exacto. El contexto acumulado es lo que permite implementar sin ambigüedad.</p>
+        </div>
+      </div>
+      <div class="reading-grid fade-up">
+        <div class="read-item">
+          <div class="read-file">context.md</div>
+          <div class="read-note">Board Jira, pack en buk-webapp, convenciones del equipo</div>
+        </div>
+        <div class="read-item">
+          <div class="read-file">spec-track.md</div>
+          <div class="read-note">Problema de negocio y goals del track</div>
+        </div>
+        <div class="read-item">
+          <div class="read-file">track.md</div>
+          <div class="read-note">Contexto técnico, entidades, reglas de negocio</div>
+        </div>
+        <div class="read-item">
+          <div class="read-file">ADR/ del track</div>
+          <div class="read-note">Decisiones arquitectónicas que afectan todas las misiones</div>
+        </div>
+        <div class="read-item">
+          <div class="read-file">3_summary.md upstream</div>
+          <div class="read-note">Solo si hay dependencias declaradas en 1_mission.md</div>
+        </div>
+        <div class="read-item">
+          <div class="read-file">spec-mission.md</div>
+          <div class="read-note">Objetivo y user stories de esta misión</div>
+        </div>
+        <div class="read-item">
+          <div class="read-file">1_mission.md</div>
+          <div class="read-note">Escenarios Given/When/Then y scope técnico</div>
+        </div>
+      </div>
+      <div class="workflow-timeline">
+        <div class="wf-row">
+          <div class="wf-phase">
+            <div class="wf-phase-name">Fase 1</div>
+            <div class="wf-phase-role">Definición del track</div>
+          </div>
+          <div class="wf-content"><span class="wf-item">spec-track.md</span><span class="wf-arrow">→</span><span
+              class="wf-item gate">Stakeholders aprueban</span><span class="wf-arrow">→</span><span
+              class="wf-item">track.md + ADR/</span><span class="wf-arrow">→</span><span class="wf-item gate">EM
+              aprueba</span><span class="wf-arrow">→</span><span class="wf-item output">Mission Map</span></div>
+        </div>
+        <div class="wf-row">
+          <div class="wf-phase">
+            <div class="wf-phase-name">Fase 2</div>
+            <div class="wf-phase-role">Definición de misión</div>
+          </div>
+          <div class="wf-content"><span class="wf-item">spec-mission.md</span><span class="wf-arrow">→</span><span
+              class="wf-item gate">Team revisa</span><span class="wf-arrow">→</span><span
+              class="wf-item">1_mission.md</span><span class="wf-item">2_jira-cards.md</span><span
+              class="wf-arrow">→</span><span class="wf-item gate">EM + Arq aprueban</span><span
+              class="wf-arrow">→</span><span class="wf-item output">Cards en Jira · ready</span></div>
+        </div>
+        <div class="wf-row">
+          <div class="wf-phase">
+            <div class="wf-phase-name">Fase 3</div>
+            <div class="wf-phase-role">Ejecución</div>
+          </div>
+          <div class="wf-content"><span class="wf-item">Lee contexto (7 archivos)</span><span
+              class="wf-arrow">→</span><span class="wf-item">Implementa P1 → P2 → ...</span><span
+              class="wf-arrow">→</span><span class="wf-item">ADR si aplica</span><span class="wf-arrow">→</span><span
+              class="wf-item output">Draft PR</span></div>
+        </div>
+        <div class="wf-row">
+          <div class="wf-phase">
+            <div class="wf-phase-name">Fase 4</div>
+            <div class="wf-phase-role">Cierre</div>
+          </div>
+          <div class="wf-content"><span class="wf-item">Verifica Given/When/Then</span><span
+              class="wf-arrow">→</span><span class="wf-item gate">EM + dev reviewean PR</span><span
+              class="wf-arrow">→</span><span class="wf-item">3_summary.md</span><span class="wf-arrow">→</span><span
+              class="wf-item output">Status: done</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="full-width" id="adrs">
+    <div class="section-top">
+      <div class="section-breadcrumb"><span>SDD</span><span class="sep">/</span><span class="current">ADRs</span></div>
+      <a class="section-anchor" href="#adrs">06</a>
+    </div>
+    <div class="section fade-up">
+      <div class="section-header">
+        <div class="section-num">06 — Architecture Decision Records</div>
+        <div>
+          <h2 class="section-title">Las decisiones<br>no se <em>olvidan</em></h2>
+          <p class="section-subtitle">Cada decisión técnica significativa queda documentada en el nivel más bajo que
+            aplique. Un ADR aceptado debe reflejarse en el track.md o 1_mission.md correspondiente.</p>
+        </div>
+      </div>
+      <div class="adr-levels">
+        <div class="adr-level">
+          <div class="adr-scope">Nivel global</div>
+          <h4>Todos los equipos</h4>
+          <div class="adr-path">decisions/YYYYMMDD_slug.md</div>
+          <p class="adr-desc">Convenciones de naming, workspace de agentes, patrones transversales a toda la org.</p>
+        </div>
+        <div class="adr-level">
+          <div class="adr-scope">Nivel equipo</div>
+          <h4>Un equipo</h4>
+          <div class="adr-path">teams/&lt;team&gt;/decisions/</div>
+          <p class="adr-desc">Decisiones que afectan solo a ese equipo: patrones de testing, convenciones de código.</p>
+        </div>
+        <div class="adr-level">
+          <div class="adr-scope">Nivel track</div>
+          <h4>Todas las misiones del track</h4>
+          <div class="adr-path">teams/&lt;team&gt;/tracks/YYYY/&lt;track&gt;/ADR/</div>
+          <p class="adr-desc">Decisiones que afectan cómo se implementan todas las misiones de ese track.</p>
+        </div>
+        <div class="adr-level">
+          <div class="adr-scope">Nivel misión</div>
+          <h4>Una misión específica</h4>
+          <div class="adr-path">...&lt;track&gt;/&lt;mission&gt;/ADR/</div>
+          <p class="adr-desc">Incluye siempre un ADR de alternativas de solución (alto nivel) como punto de partida.</p>
+        </div>
+      </div>
+      <div style="margin-top:2rem">
+        <div class="code-block"><span class="cm"># Formato de un ADR — _templates/adr.md</span>
+
+          <span class="kw">Status:</span> <span class="str">proposed</span> | <span class="str">accepted</span> | <span
+            class="str">deprecated</span> | <span class="str">superseded</span>
+          <span class="kw">Date:</span> YYYY-MM-DD
+          <span class="kw">Track:</span> 0513_nombre-del-track
+          <span class="kw">Mission:</span> 01_nombre-mision <span class="cm"># opcional si es a nivel track</span>
+
+          <span class="hl">## Contexto</span>
+          ¿Qué situación o restricción motiva esta decisión?
+
+          <span class="hl">## Decisión</span>
+          ¿Qué se decidió hacer?
+
+          <span class="hl">## Alternativas consideradas</span>
+          - Opción A: [descripción] — descartada porque...
+          - Opción B: [descripción] — descartada porque...
+
+          <span class="hl">## Consecuencias</span>
+          Qué implica esta decisión en términos de mantenimiento, performance, deuda técnica.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="full-width">
+    <div class="section fade-up">
+      <div class="section-header">
+        <div class="section-num">07 — Estructura del repositorio</div>
+        <div>
+          <h2 class="section-title">Un archivo para <em>cada cosa</em></h2>
+          <p class="section-subtitle">La estructura de carpetas es la navegación. Cada archivo tiene un propósito único,
+            un dueño, y un reviewer definido.</p>
+        </div>
+      </div>
+      <div class="code-block"><span class="cm">sdd-buk-docs/</span>
+        ├── <span class="kw">_templates/</span> <span class="cm"># Plantillas globales — no se sobreescriben por
+          equipo</span>
+        ├── <span class="kw">agents/</span> <span class="cm"># Prompts de los agentes de IA</span>
+        │ ├── orquestador.md <span class="cm"># Punto de entrada — Haiku</span>
+        │ ├── investigacion.md
+        │ ├── armado.md
+        │ ├── ejecutor.md
+        │ ├── arquitecto.md
+        │ └── cloud-architect.md
+        ├── <span class="kw">decisions/</span> <span class="cm"># ADRs globales</span>
+        └── <span class="kw">teams/</span>
+        └── &lt;equipo&gt;/
+        ├── context.md <span class="cm"># Board Jira + pack buk-webapp</span>
+        ├── decisions/
+        └── tracks/
+        └── <span class="hl">YYYY/MMDD_&lt;track&gt;/</span>
+        ├── spec-track.md <span class="cm"># Owner: PM</span>
+        ├── track.md <span class="cm"># Owner: Arquitecto</span>
+        ├── ADR/
+        └── <span class="hl">NN_&lt;misión&gt;/</span>
+        ├── spec-mission.md <span class="cm"># Owner: PM</span>
+        ├── 1_mission.md <span class="cm"># Owner: Champion</span>
+        ├── 2_jira-cards.md
+        ├── 3_summary.md
+        └── ADR/
+        └── 00_alternativas_de_solucion.md</div>
+    </div>
+  </div>
+
+  <div class="full-width" id="quickstart">
+    <div class="section-top">
+      <div class="section-breadcrumb"><span>SDD</span><span class="sep">/</span><span class="current">Comandos
+          rápidos</span></div><a class="section-anchor" href="#quickstart">08</a>
+    </div>
+    <div class="section fade-up">
+      <div class="section-header">
+        <div class="section-num">08 — Comandos rápidos</div>
+        <div>
+          <h2 class="section-title">Empezar en <em>segundos</em></h2>
+          <p class="section-subtitle">Todos los agentes corren desde buk-webapp con las specs accesibles via symlink en
+            specs/. Las skills detectan paths, leen contexto y confirman antes de escribir.</p>
+        </div>
+      </div>
+      <div class="skills-list">
+        <div class="skill-row">
+          <div class="skill-cmd">/sdd-track &lt;equipo&gt; "&lt;problema&gt;"</div>
+          <div class="skill-desc">Crea track nuevo. Explora el codebase, genera spec-track.md + track.md borradores y
+            crea la estructura de carpetas.</div>
+          <div class="skill-agent">investigacion</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-cmd">/sdd-mission &lt;equipo&gt; &lt;track&gt; "&lt;objetivo&gt;"</div>
+          <div class="skill-desc">Crea misión dentro de un track existente. Detecta número de secuencia y genera
+            spec-mission.md + 1_mission.md + 2_jira-cards.md.</div>
+          <div class="skill-agent">armado</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-cmd">/sdd-execute &lt;equipo&gt; &lt;track&gt;</div>
+          <div class="skill-desc">Implementa la misión en estado ready. Si hay varias, pregunta cuál. Lee el stack
+            completo de specs antes de escribir código.</div>
+          <div class="skill-agent">ejecutor</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-cmd">/sdd-adr &lt;equipo&gt; [&lt;track&gt;] "&lt;decisión&gt;"</div>
+          <div class="skill-desc">Documenta una decisión técnica. Lee ADRs existentes en ese scope y sus padres, explora
+            el codebase, genera borrador con alternativas.</div>
+          <div class="skill-agent">arquitecto</div>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:2rem">
+        <p>¿No sé en qué estado está el track? El Orquestador lee todos los archivos, detecta el próximo paso, y
+          pregunta: <em>¿Ejecuto? (s/n)</em></p><cite>agents/orquestador.md — Haiku, el punto de entrada por
+          defecto</cite>
+      </div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid var(--border);max-width:1400px;margin:0 auto;padding:0 5rem">
+    <footer>
+      <div class="footer-left">
+        <p>SDD · Spec-Driven Development · Buk Engineering</p>
+        <p>Las specs son la fuente de verdad. Un PR sin spec aprobada no debería mergearse.</p>
+      </div>
+      <ul class="footer-nav">
+        <li><a href="#why">Por qué</a></li>
+        <li><a href="#lifecycle">Ciclo</a></li>
+        <li><a href="#agents">Agentes</a></li>
+        <li><a href="#adrs">ADRs</a></li>
+      </ul>
+    </footer>
+  </div>
+
+  <script>
+    const obs = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) x.target.classList.add('visible'); }), { threshold: 0.08 });
+    document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+
+    // Hamburger menu
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    hamburger.addEventListener('click', () => {
+      const open = mobileMenu.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', open);
+      hamburger.innerHTML = open ? '&#10005;' : '&#9776;';
+    });
+    mobileMenu.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', false);
+        hamburger.innerHTML = '&#9776;';
+      });
+    });
+
+    // Active nav link on scroll
+    const sections = document.querySelectorAll('[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    const scrollObs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(a => a.classList.remove('active'));
+          const active = document.querySelector('.nav-links a[href="#' + entry.target.id + '"]');
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    sections.forEach(s => scrollObs.observe(s));
+  </script>
+</body>
+
+</html>

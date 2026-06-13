@@ -1,0 +1,6 @@
+.DS_Store
+CLAUDE.local.md
+.env.local
+buk-specs
+local-files
+**/local-files
