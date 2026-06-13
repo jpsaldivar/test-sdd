@@ -78,8 +78,9 @@ export class GitHubApi {
    */
   async createIssue(team, track, sectionSlug, title, body) {
     const label = `sdd:${team}/${track}/${sectionSlug}`;
-    const url   = `${API_BASE}/repos/${this.owner}/${this.repo}/issues`;
+    await this._ensureLabelExists(label);
 
+    const url = `${API_BASE}/repos/${this.owner}/${this.repo}/issues`;
     const res = await this._fetch(url, {
       method: 'POST',
       body: JSON.stringify({ title, body, labels: [label] }),
@@ -87,6 +88,19 @@ export class GitHubApi {
 
     this._invalidateCache(`issues:${team}/${track}`);
     return res;
+  }
+
+  async _ensureLabelExists(labelName) {
+    const url = `${API_BASE}/repos/${this.owner}/${this.repo}/labels`;
+    try {
+      await this._fetch(`${url}/${encodeURIComponent(labelName)}`);
+    } catch {
+      // Label no existe — crearlo
+      await this._fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ name: labelName, color: '6f42c1' }),
+      });
+    }
   }
 
   /**

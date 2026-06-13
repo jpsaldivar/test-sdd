@@ -148,7 +148,10 @@ export class Sidebar {
       </div>
     `;
 
-    item.addEventListener('click', () => this._toggleThread(item, issue, sectionSlug));
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.thread-replies, .reply-form, button, textarea, a')) return;
+      this._toggleThread(item, issue, sectionSlug);
+    });
     return item;
   }
 
