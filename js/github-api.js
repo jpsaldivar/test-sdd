@@ -77,13 +77,17 @@ export class GitHubApi {
    * Crea un Issue con el label de sección correcto.
    */
   async createIssue(team, track, sectionSlug, title, body) {
-    const label = `sdd:${team}/${track}/${sectionSlug}`;
-    await this._ensureLabelExists(label);
+    // Dos labels: track (para buscar todos los issues del track) +
+    // sección (para filtrar por sección en el sidebar)
+    const trackLabel   = `sdd:${team}/${track}`;
+    const sectionLabel = `sdd:${team}/${track}/${sectionSlug}`;
+    await this._ensureLabelExists(trackLabel);
+    await this._ensureLabelExists(sectionLabel);
 
     const url = `${API_BASE}/repos/${this.owner}/${this.repo}/issues`;
     const res = await this._fetch(url, {
       method: 'POST',
-      body: JSON.stringify({ title, body, labels: [label] }),
+      body: JSON.stringify({ title, body, labels: [trackLabel, sectionLabel] }),
     });
 
     this._invalidateCache(`issues:${team}/${track}`);
@@ -95,7 +99,6 @@ export class GitHubApi {
     try {
       await this._fetch(`${url}/${encodeURIComponent(labelName)}`);
     } catch {
-      // Label no existe — crearlo
       await this._fetch(url, {
         method: 'POST',
         body: JSON.stringify({ name: labelName, color: '6f42c1' }),
