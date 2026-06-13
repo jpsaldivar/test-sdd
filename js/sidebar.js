@@ -135,7 +135,11 @@ export class Sidebar {
     const lastComment = issue.body || '';
     const preview = lastComment.slice(0, 80) + (lastComment.length > 80 ? '…' : '');
 
-    item.innerHTML = `
+    // Solo el header es clickeable para toggle — el área de replies no colapsa el hilo
+    const header = document.createElement('div');
+    header.className = 'thread-header';
+    header.style.cursor = 'pointer';
+    header.innerHTML = `
       <div class="thread-title">
         <span class="thread-status-dot ${issue.state}"></span>
         ${escapeHtml(issue.title)}
@@ -147,35 +151,25 @@ export class Sidebar {
         <span>${timeAgo(issue.updated_at)}</span>
       </div>
     `;
-
-    item.addEventListener('click', (e) => {
-      if (e.target.closest('.thread-replies, .reply-form, button, textarea, a')) return;
-      this._toggleThread(item, issue, sectionSlug);
-    });
+    item.appendChild(header);
+    header.addEventListener('click', () => this._toggleThread(item, issue, sectionSlug));
     return item;
   }
 
   async _toggleThread(itemEl, issue, sectionSlug) {
     const isExpanded = itemEl.classList.toggle('expanded');
-
-    // Eliminar replies previos si los hay
     itemEl.querySelectorAll('.thread-replies, .reply-form').forEach(e => e.remove());
-
     if (!isExpanded) return;
 
     const repliesEl = document.createElement('div');
     repliesEl.className = 'thread-replies';
     repliesEl.innerHTML = '<div style="color:#aaa;font-size:0.8rem">Cargando…</div>';
     itemEl.appendChild(repliesEl);
-
-    const replyFormEl = this._buildReplyForm(issue.number);
-    itemEl.appendChild(replyFormEl);
+    itemEl.appendChild(this._buildReplyForm(issue.number, repliesEl));
 
     try {
       const comments = await this.api.getIssueComments(issue.number);
       repliesEl.innerHTML = '';
-
-      // El body del Issue como primer mensaje
       if (issue.body) {
         repliesEl.appendChild(this._renderReply({
           user: issue.user,
@@ -183,7 +177,6 @@ export class Sidebar {
           created_at: issue.created_at,
         }));
       }
-
       for (const c of comments) {
         repliesEl.appendChild(this._renderReply(c));
       }
@@ -203,7 +196,7 @@ export class Sidebar {
     return el;
   }
 
-  _buildReplyForm(issueNumber) {
+  _buildReplyForm(issueNumber, repliesEl) {
     const form = document.createElement('div');
     form.className = 'reply-form';
     form.innerHTML = `
@@ -223,9 +216,7 @@ export class Sidebar {
       try {
         const comment = await this.api.addComment(issueNumber, body);
         textarea.value = '';
-        // Agregar el reply optimísticamente
-        const replyEl = this._renderReply(comment);
-        form.previousElementSibling.appendChild(replyEl);
+        repliesEl.appendChild(this._renderReply(comment));
       } catch (e) {
         alert('Error al enviar reply. Intenta de nuevo.');
       } finally {
