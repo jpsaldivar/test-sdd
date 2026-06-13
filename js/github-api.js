@@ -15,40 +15,57 @@ export class GitHubApi {
     this.auth  = auth;
   }
 
+  // ─── User ───────────────────────────────────────────────────
+
+  async getCurrentUser() {
+    return this._cachedGet('current-user', `${API_BASE}/user`);
+  }
+
+  // ─── Branches ──────────────────────────────────────────────
+
+  /**
+   * Retorna la lista de ramas del repo.
+   */
+  async getBranches() {
+    const url = `${API_BASE}/repos/${this.owner}/${this.repo}/branches?per_page=100`;
+    return this._cachedGet('branches', url);
+  }
+
   // ─── Contents ──────────────────────────────────────────────
 
   /**
    * Lista los archivos .md de un track (o misión) en orden de fase.
-   * Orden esperado: spec-track, track, spec-mission, 1_mission, 2_jira-cards, pruebas
+   * @param {string|null} branch - rama a leer; null = rama por defecto del repo
    */
-  async listTrackFiles(team, track, mission = null) {
+  async listTrackFiles(team, track, mission = null, branch = null) {
     const path = mission
-      ? `teams/${team}/tracks/${await this._resolveTrackYear(team, track)}/${track}/${mission}`
-      : `teams/${team}/tracks/${await this._resolveTrackYear(team, track)}/${track}`;
+      ? `teams/${team}/tracks/${await this._resolveTrackYear(team, track, branch)}/${track}/${mission}`
+      : `teams/${team}/tracks/${await this._resolveTrackYear(team, track, branch)}/${track}`;
 
-    const items = await this._cachedGet(`contents:${path}`,
-      `${API_BASE}/repos/${this.owner}/${this.repo}/contents/${path}`);
+    const ref = branch ? `?ref=${encodeURIComponent(branch)}` : '';
+    const items = await this._cachedGet(`contents:${path}:${branch}`,
+      `${API_BASE}/repos/${this.owner}/${this.repo}/contents/${path}${ref}`);
 
-    const mdFiles = items
+    return items
       .filter(f => f.type === 'file' && f.name.endsWith('.md'))
       .map(f => f.name)
       .sort(fileOrder);
-
-    return mdFiles;
   }
 
   /**
    * Lee el contenido de un archivo .md (decodifica base64).
+   * @param {string|null} branch - rama a leer; null = rama por defecto del repo
    */
-  async getFileContent(team, track, filename, mission = null) {
-    const year = await this._resolveTrackYear(team, track);
+  async getFileContent(team, track, filename, mission = null, branch = null) {
+    const year = await this._resolveTrackYear(team, track, branch);
     const dir  = mission
       ? `teams/${team}/tracks/${year}/${track}/${mission}`
       : `teams/${team}/tracks/${year}/${track}`;
     const path = `${dir}/${filename}`;
+    const ref  = branch ? `?ref=${encodeURIComponent(branch)}` : '';
 
-    const data = await this._cachedGet(`file:${path}`,
-      `${API_BASE}/repos/${this.owner}/${this.repo}/contents/${path}`);
+    const data = await this._cachedGet(`file:${path}:${branch}`,
+      `${API_BASE}/repos/${this.owner}/${this.repo}/contents/${path}${ref}`);
 
     return atob(data.content.replace(/\n/g, ''));
   }
@@ -126,15 +143,14 @@ export class GitHubApi {
 
   // ─── Internals ─────────────────────────────────────────────
 
-  async _resolveTrackYear(team, track) {
-    // El track tiene formato MMDD_slug; el año está en el directorio padre.
-    // Busca en teams/{team}/tracks/ el directorio que contenga el track.
-    const url = `${API_BASE}/repos/${this.owner}/${this.repo}/contents/teams/${team}/tracks`;
-    const years = await this._cachedGet(`years:${team}`, url);
+  async _resolveTrackYear(team, track, branch = null) {
+    const ref = branch ? `?ref=${encodeURIComponent(branch)}` : '';
+    const url = `${API_BASE}/repos/${this.owner}/${this.repo}/contents/teams/${team}/tracks${ref}`;
+    const years = await this._cachedGet(`years:${team}:${branch}`, url);
 
     for (const yearDir of years.filter(d => d.type === 'dir')) {
-      const tracksUrl = `${API_BASE}/repos/${this.owner}/${this.repo}/contents/teams/${team}/tracks/${yearDir.name}`;
-      const tracks = await this._cachedGet(`tracks:${team}:${yearDir.name}`, tracksUrl);
+      const tracksUrl = `${API_BASE}/repos/${this.owner}/${this.repo}/contents/teams/${team}/tracks/${yearDir.name}${ref}`;
+      const tracks = await this._cachedGet(`tracks:${team}:${yearDir.name}:${branch}`, tracksUrl);
       if (tracks.some(t => t.name === track)) return yearDir.name;
     }
 

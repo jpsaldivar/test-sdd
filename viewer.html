@@ -5,11 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SDD Viewer</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
-  <!-- Pantalla de login (visible cuando no hay token) -->
+  <!-- Header superior (siempre visible) -->
+  <header id="top-header">
+    <a class="header-logo" href="viewer.html">
+      <div class="header-logo-mark">SDD</div>
+      <span class="header-logo-text"><span>SDD</span> Viewer</span>
+    </a>
+    <div class="header-sep"></div>
+    <div class="header-track-info">
+      <span class="header-track-name" id="header-track-name"></span>
+    </div>
+    <div class="header-branch-select">
+      <label for="branch-select">Rama</label>
+      <select id="branch-select" disabled>
+        <option value="">Cargando…</option>
+      </select>
+    </div>
+    <div class="header-sep"></div>
+    <div class="header-user">
+      <span class="header-user-dot"></span>
+      <span id="header-username"></span>
+    </div>
+    <button class="header-logout" id="logout-btn">Salir</button>
+  </header>
+
+  <!-- Login screen -->
   <div id="login-screen" class="hidden">
     <div class="login-card">
       <h1>SDD Viewer</h1>
@@ -18,13 +43,13 @@
       <div id="device-flow" class="hidden">
         <p>Ingresa este código en <a id="device-url" href="https://github.com/login/device" target="_blank">github.com/login/device</a>:</p>
         <div class="device-code" id="device-code"></div>
-        <p class="hint">Esperando autorización...</p>
+        <p class="hint">Esperando autorización…</p>
       </div>
       <div id="login-error" class="hidden error-msg"></div>
     </div>
   </div>
 
-  <!-- App principal (visible cuando hay token) -->
+  <!-- App principal -->
   <div id="app" class="hidden">
     <nav id="nav">
       <div id="nav-track-info">
@@ -55,6 +80,8 @@
     const REPO_NAME       = 'test-sdd';
     const OAUTH_CLIENT_ID = 'Ov23liXe8mcUwGbAIfqb';
 
+    mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+
     const auth     = new Auth(OAUTH_CLIENT_ID);
     const router   = new Router();
     const api      = new GitHubApi(REPO_OWNER, REPO_NAME, auth);
@@ -64,33 +91,65 @@
     async function boot() {
       const token = auth.getToken();
       if (!token) {
+        document.getElementById('top-header').style.display = 'none';
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('login-btn').addEventListener('click', () => auth.startDeviceFlow());
         return;
       }
+
       document.getElementById('app').classList.remove('hidden');
+      document.getElementById('logout-btn').addEventListener('click', () => auth.logout());
+
+      // Usuario actual
+      try {
+        const user = await api.getCurrentUser();
+        document.getElementById('header-username').textContent = user.login;
+      } catch {}
+
       const params = router.getParams();
       if (params.team && params.track) {
+        document.getElementById('header-track-name').textContent =
+          `${params.team} / ${params.track}`;
+        await loadBranches(params.branch);
         await loadTrack(params);
       } else {
         document.getElementById('doc-body').innerHTML =
           '<p style="padding:40px;color:#888">Abre el viewer con ?team=X&track=Y</p>';
+        await loadBranches(params.branch);
       }
     }
 
-    async function loadTrack({ team, track, doc, section, mission }) {
+    async function loadBranches(activeBranch) {
+      const select = document.getElementById('branch-select');
+      try {
+        const branches = await api.getBranches();
+        select.innerHTML = branches
+          .map(b => `<option value="${b.name}" ${b.name === activeBranch ? 'selected' : ''}>${b.name}</option>`)
+          .join('');
+        select.disabled = false;
+        select.addEventListener('change', () => {
+          router.setParam('branch', select.value);
+          location.reload();
+        });
+      } catch {
+        select.innerHTML = '<option value="">Error al cargar ramas</option>';
+      }
+    }
+
+    async function loadTrack({ team, track, doc, section, mission, branch }) {
       document.getElementById('nav-track-name').textContent = track;
-      const files = await api.listTrackFiles(team, track, mission);
-      renderNav(files, doc);
+      const files = await api.listTrackFiles(team, track, mission, branch);
+      renderNav(files, doc, branch);
       const activeDoc = doc || files[0];
-      const content = await api.getFileContent(team, track, activeDoc, mission);
+      const content = await api.getFileContent(team, track, activeDoc, mission, branch);
       const { html, sections } = renderer.render(content);
       document.getElementById('doc-body').innerHTML = html;
+      await renderer.renderMermaid();
       await sidebar.load(team, track, sections);
       if (section) sidebar.focusSection(section);
     }
 
-    function renderNav(files, activeDoc) {
+    function renderNav(files, activeDoc, branch) {
       const list = document.getElementById('nav-doc-list');
       list.innerHTML = files.map(f => `
         <li class="${f === activeDoc ? 'active' : ''}">

@@ -17,6 +17,7 @@ export class Router {
       mission: p.get('mission') || null,
       doc:     p.get('doc')     || null,
       section: p.get('section') || null,
+      branch:  p.get('branch')  || null,
     };
   }
 
