@@ -1,466 +1,112 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Docs Viewer</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown-light.min.css">
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f6f8fa;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      background: #24292f;
-      color: #fff;
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    header a {
-      color: #adbac7;
-      text-decoration: none;
-      font-size: 13px;
-      white-space: nowrap;
-    }
-    header a:hover { color: #fff; }
-
-    #breadcrumb {
-      font-size: 13px;
-      color: #adbac7;
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    #breadcrumb span { color: #fff; }
-
-    /* Branch selector */
-    #branch-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    #branch-wrapper label {
-      font-size: 12px;
-      color: #adbac7;
-    }
-
-    #branch-input {
-      background: #32383f;
-      border: 1px solid #444c56;
-      color: #cdd9e5;
-      border-radius: 6px;
-      padding: 4px 8px;
-      font-size: 12px;
-      width: 200px;
-    }
-    #branch-input:focus { outline: none; border-color: #388bfd; }
-    #branch-input::placeholder { color: #768390; }
-
-    #branch-badge {
-      background: #1f6feb;
-      color: #fff;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 10px;
-      white-space: nowrap;
-    }
-
-    /* Settings button */
-    #settings-btn {
-      background: none;
-      border: 1px solid #444c56;
-      color: #adbac7;
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    #settings-btn:hover { background: #32383f; color: #fff; }
-
-    /* Modal */
-    #modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.5);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-    }
-    #modal-overlay.open { display: flex; }
-
-    #modal {
-      background: #fff;
-      border-radius: 8px;
-      padding: 28px 32px;
-      width: 480px;
-      max-width: 95vw;
-    }
-    #modal h3 { margin: 0 0 16px; font-size: 16px; }
-    #modal label { display: block; font-size: 13px; color: #57606a; margin-bottom: 4px; }
-
-    #modal input {
-      width: 100%;
-      padding: 7px 10px;
-      border: 1px solid #d0d7de;
-      border-radius: 6px;
-      font-size: 13px;
-      margin-bottom: 14px;
-    }
-
-    #modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
-
-    .btn-primary {
-      padding: 7px 16px;
-      background: #2da44e;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-    }
-    .btn-primary:hover { background: #2c974b; }
-
-    .btn-secondary {
-      padding: 7px 16px;
-      background: #f6f8fa;
-      color: #24292f;
-      border: 1px solid #d0d7de;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-    }
-    .btn-secondary:hover { background: #eaeef2; }
-
-    .btn-danger {
-      padding: 7px 16px;
-      background: #fff;
-      color: #cf222e;
-      border: 1px solid #d0d7de;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-    }
-    .btn-danger:hover { background: #fff0ee; }
-
-    #modal small { display: block; font-size: 11px; color: #768390; margin-top: -10px; margin-bottom: 14px; }
-
-    /* Content */
-    main {
-      max-width: 960px;
-      margin: 32px auto;
-      padding: 0 24px 64px;
-    }
-
-    .markdown-body {
-      background: #fff;
-      border: 1px solid #d0d7de;
-      border-radius: 6px;
-      padding: 40px 48px;
-    }
-
-    #error {
-      background: #fff8c5;
-      border: 1px solid #d4a72c;
-      border-radius: 6px;
-      padding: 16px 20px;
-      color: #633c01;
-      display: none;
-    }
-
-    #loading {
-      text-align: center;
-      padding: 60px;
-      color: #57606a;
-    }
-
-    #path-form {
-      background: #fff;
-      border: 1px solid #d0d7de;
-      border-radius: 6px;
-      padding: 40px;
-      text-align: center;
-    }
-    #path-form p { color: #57606a; margin-bottom: 16px; }
-
-    #path-input {
-      width: 100%;
-      max-width: 500px;
-      padding: 8px 12px;
-      border: 1px solid #d0d7de;
-      border-radius: 6px;
-      font-size: 14px;
-      margin-right: 8px;
-    }
-    #path-form button {
-      padding: 8px 16px;
-      background: #2da44e;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    #path-form button:hover { background: #2c974b; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDD Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
-<header>
-  <a href="index.html">← Inicio</a>
-  <div id="breadcrumb"></div>
-
-  <div id="branch-wrapper">
-    <label for="branch-input">Rama:</label>
-    <input id="branch-input" type="text" placeholder="main (desplegada)" />
-    <button id="go-branch-btn" class="btn-primary" style="padding:4px 10px;font-size:12px">Ir</button>
-    <span id="branch-badge" style="display:none"></span>
-  </div>
-
-  <button id="settings-btn" onclick="openSettings()">⚙ Token</button>
-</header>
-
-<!-- Modal de configuración del token -->
-<div id="modal-overlay">
-  <div id="modal">
-    <h3>Configuración de acceso</h3>
-
-    <label>GitHub Enterprise host</label>
-    <input id="cfg-host" type="text" placeholder="github.tuempresa.com" />
-
-    <label>Organización / usuario</label>
-    <input id="cfg-owner" type="text" placeholder="mi-org" />
-
-    <label>Repositorio</label>
-    <input id="cfg-repo" type="text" placeholder="sdd-buk-docs" />
-
-    <label>Personal Access Token</label>
-    <input id="cfg-token" type="password" placeholder="ghp_..." />
-    <small>Necesario para leer ramas desde repos privados. Se guarda solo en tu navegador (localStorage).</small>
-
-    <div id="modal-actions">
-      <button class="btn-danger" onclick="clearToken()">Borrar token</button>
-      <button class="btn-secondary" onclick="closeSettings()">Cancelar</button>
-      <button class="btn-primary" onclick="saveSettings()">Guardar</button>
+  <!-- Pantalla de login (visible cuando no hay token) -->
+  <div id="login-screen" class="hidden">
+    <div class="login-card">
+      <h1>SDD Viewer</h1>
+      <p>Conéctate con tu cuenta de GitHub para acceder a los specs.</p>
+      <button id="login-btn" class="btn-primary">Conectar con GitHub</button>
+      <div id="device-flow" class="hidden">
+        <p>Ingresa este código en <a id="device-url" href="https://github.com/login/device" target="_blank">github.com/login/device</a>:</p>
+        <div class="device-code" id="device-code"></div>
+        <p class="hint">Esperando autorización...</p>
+      </div>
+      <div id="login-error" class="hidden error-msg"></div>
     </div>
   </div>
-</div>
 
-<main>
-  <div id="error"></div>
-  <div id="loading">Cargando documento…</div>
-  <div id="path-form" style="display:none">
-    <p>Ingresa la ruta del archivo markdown a visualizar:</p>
-    <input id="path-input" type="text" placeholder="ej: teams/recruiting/tracks/2026/0520_.../spec-mission.md" />
-    <button onclick="navigateTo()">Ver</button>
+  <!-- App principal (visible cuando hay token) -->
+  <div id="app" class="hidden">
+    <nav id="nav">
+      <div id="nav-track-info">
+        <div id="nav-track-name"></div>
+        <div id="nav-track-status"></div>
+      </div>
+      <ul id="nav-doc-list"></ul>
+    </nav>
+
+    <main id="content">
+      <div id="doc-body"></div>
+    </main>
+
+    <aside id="sidebar">
+      <div id="sidebar-header"></div>
+      <div id="threads-list"></div>
+    </aside>
   </div>
-  <article id="content" class="markdown-body" style="display:none"></article>
-</main>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
-<script>
-  // ── Parámetros de URL ────────────────────────────────────────────────────────
-  const params = new URLSearchParams(location.search);
-  const path   = params.get('path');
-  const branch = params.get('branch'); // null = rama desplegada
+  <script type="module">
+    import { Auth }      from './js/auth.js';
+    import { Router }    from './js/router.js';
+    import { GitHubApi } from './js/github-api.js';
+    import { Renderer }  from './js/renderer.js';
+    import { Sidebar }   from './js/sidebar.js';
 
-  // ── Config (localStorage) ───────────────────────────────────────────────────
-  function getCfg() {
-    return {
-      host:  localStorage.getItem('gh_host')  || '',
-      owner: localStorage.getItem('gh_owner') || '',
-      repo:  localStorage.getItem('gh_repo')  || '',
-      token: localStorage.getItem('gh_token') || '',
-    };
-  }
+    const REPO_OWNER      = 'jpsaldivar';
+    const REPO_NAME       = 'test-sdd';
+    const OAUTH_CLIENT_ID = 'Ov23liXe8mcUwGbAIfqb';
 
-  function openSettings() {
-    const cfg = getCfg();
-    document.getElementById('cfg-host').value  = cfg.host;
-    document.getElementById('cfg-owner').value = cfg.owner;
-    document.getElementById('cfg-repo').value  = cfg.repo;
-    document.getElementById('cfg-token').value = cfg.token;
-    document.getElementById('modal-overlay').classList.add('open');
-  }
-  function closeSettings() {
-    document.getElementById('modal-overlay').classList.remove('open');
-  }
-  function saveSettings() {
-    localStorage.setItem('gh_host',  document.getElementById('cfg-host').value.trim().replace(/\/$/, ''));
-    localStorage.setItem('gh_owner', document.getElementById('cfg-owner').value.trim());
-    localStorage.setItem('gh_repo',  document.getElementById('cfg-repo').value.trim());
-    localStorage.setItem('gh_token', document.getElementById('cfg-token').value.trim());
-    closeSettings();
-    if (path) loadFile();  // recarga con nueva config
-  }
-  function clearToken() {
-    ['gh_host','gh_owner','gh_repo','gh_token'].forEach(k => localStorage.removeItem(k));
-    document.getElementById('cfg-token').value = '';
-    closeSettings();
-  }
+    const auth     = new Auth(OAUTH_CLIENT_ID);
+    const router   = new Router();
+    const api      = new GitHubApi(REPO_OWNER, REPO_NAME, auth);
+    const renderer = new Renderer();
+    const sidebar  = new Sidebar(api, router);
 
-  // Cierra modal al hacer click fuera
-  document.getElementById('modal-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('modal-overlay')) closeSettings();
-  });
-
-  // ── DOM refs ─────────────────────────────────────────────────────────────────
-  const $loading = document.getElementById('loading');
-  const $content = document.getElementById('content');
-  const $error   = document.getElementById('error');
-  const $form    = document.getElementById('path-form');
-  const $crumb   = document.getElementById('breadcrumb');
-  const $badge   = document.getElementById('branch-badge');
-  const $branchInput = document.getElementById('branch-input');
-
-  // ── Branch badge ─────────────────────────────────────────────────────────────
-  if (branch) {
-    $badge.textContent = branch;
-    $badge.style.display = 'inline-block';
-    $branchInput.value = branch;
-  }
-
-  // ── Navegar a una rama distinta ───────────────────────────────────────────────
-  document.getElementById('go-branch-btn').addEventListener('click', () => {
-    const b = $branchInput.value.trim();
-    if (!b || b === 'main') {
-      // volver a rama desplegada
-      const p = new URLSearchParams(location.search);
-      p.delete('branch');
-      location.search = p.toString();
-    } else {
-      const p = new URLSearchParams(location.search);
-      p.set('branch', b);
-      location.search = p.toString();
-    }
-  });
-  $branchInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('go-branch-btn').click();
-  });
-
-  // ── Helpers ───────────────────────────────────────────────────────────────────
-  function showError(msg) {
-    $loading.style.display = 'none';
-    $error.style.display = 'block';
-    $error.textContent = msg;
-  }
-
-  function viewerUrl(filePath, branchOverride) {
-    const p = new URLSearchParams();
-    p.set('path', filePath);
-    const b = branchOverride !== undefined ? branchOverride : branch;
-    if (b) p.set('branch', b);
-    return `viewer.html?${p.toString()}`;
-  }
-
-  function buildBreadcrumb(filePath) {
-    const parts = filePath.split('/');
-    const crumbs = parts.map((part, i) => {
-      if (i === parts.length - 1) return `<span>${part}</span>`;
-      const subPath = parts.slice(0, i + 1).join('/');
-      return `<a href="${viewerUrl(subPath)}">${part}</a>`;
-    });
-    $crumb.innerHTML = crumbs.join(' / ');
-  }
-
-  function navigateTo() {
-    const val = document.getElementById('path-input').value.trim();
-    if (val) location.href = viewerUrl(val);
-  }
-
-  document.getElementById('path-input')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') navigateTo();
-  });
-
-  // Reescribe links .md internos para navegar dentro del viewer
-  function rewriteLinks(container) {
-    container.querySelectorAll('a[href]').forEach(a => {
-      const href = a.getAttribute('href');
-      if (!href || href.startsWith('http') || href.startsWith('#')) return;
-      if (!href.endsWith('.md')) return;
-
-      const base = path ? path.split('/').slice(0, -1).join('/') : '';
-      const resolved = href.startsWith('/')
-        ? href.slice(1)
-        : (base ? `${base}/${href}` : href);
-
-      a.href = viewerUrl(resolved);
-    });
-  }
-
-  // ── Fetch ─────────────────────────────────────────────────────────────────────
-  function fetchLocal(filePath) {
-    return fetch(filePath).then(r => {
-      if (!r.ok) throw new Error(`No se pudo cargar "${filePath}" (${r.status})`);
-      return r.text();
-    });
-  }
-
-  function fetchFromBranch(filePath, ref) {
-    const cfg = getCfg();
-    if (!cfg.host || !cfg.owner || !cfg.repo) {
-      return Promise.reject(new Error(
-        'Configura el host, organización y repositorio usando el botón ⚙ Token antes de leer desde una rama.'
-      ));
-    }
-
-    // GitHub Enterprise raw URL: https://{host}/{owner}/{repo}/raw/{branch}/{path}
-    const url = `https://${cfg.host}/${cfg.owner}/${cfg.repo}/raw/${encodeURIComponent(ref)}/${filePath}`;
-    const headers = cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {};
-
-    return fetch(url, { headers }).then(r => {
-      if (r.status === 401 || r.status === 403) {
-        throw new Error(`Sin acceso a la rama "${ref}". Verifica el token en ⚙ Token.`);
+    async function boot() {
+      const token = auth.getToken();
+      if (!token) {
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('login-btn').addEventListener('click', () => auth.startDeviceFlow());
+        return;
       }
-      if (!r.ok) throw new Error(`No se pudo cargar "${filePath}" desde la rama "${ref}" (${r.status})`);
-      return r.text();
-    });
-  }
+      document.getElementById('app').classList.remove('hidden');
+      const params = router.getParams();
+      if (params.team && params.track) {
+        await loadTrack(params);
+      } else {
+        document.getElementById('doc-body').innerHTML =
+          '<p style="padding:40px;color:#888">Abre el viewer con ?team=X&track=Y</p>';
+      }
+    }
 
-  // ── Main ──────────────────────────────────────────────────────────────────────
-  function loadFile() {
-    $error.style.display = 'none';
-    $loading.style.display = 'block';
-    $content.style.display = 'none';
+    async function loadTrack({ team, track, doc, section, mission }) {
+      document.getElementById('nav-track-name').textContent = track;
+      const files = await api.listTrackFiles(team, track, mission);
+      renderNav(files, doc);
+      const activeDoc = doc || files[0];
+      const content = await api.getFileContent(team, track, activeDoc, mission);
+      const { html, sections } = renderer.render(content);
+      document.getElementById('doc-body').innerHTML = html;
+      await sidebar.load(team, track, sections);
+      if (section) sidebar.focusSection(section);
+    }
 
-    const promise = branch
-      ? fetchFromBranch(path, branch)
-      : fetchLocal(path);
+    function renderNav(files, activeDoc) {
+      const list = document.getElementById('nav-doc-list');
+      list.innerHTML = files.map(f => `
+        <li class="${f === activeDoc ? 'active' : ''}">
+          <a href="#" data-doc="${f}">${f}</a>
+        </li>
+      `).join('');
+      list.querySelectorAll('a').forEach(a =>
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          router.setParam('doc', a.dataset.doc);
+          location.reload();
+        })
+      );
+    }
 
-    promise
-      .then(md => {
-        $loading.style.display = 'none';
-        $content.style.display = 'block';
-        $content.innerHTML = marked.parse(md);
-        rewriteLinks($content);
-      })
-      .catch(e => showError(e.message));
-  }
-
-  if (!path) {
-    $loading.style.display = 'none';
-    $form.style.display = 'block';
-  } else {
-    document.title = path.split('/').pop();
-    buildBreadcrumb(path);
-    loadFile();
-  }
-</script>
-
+    boot();
+  </script>
 </body>
 </html>
