@@ -95,14 +95,17 @@ export class GitHubApi {
   }
 
   async _ensureLabelExists(labelName) {
-    const url = `${API_BASE}/repos/${this.owner}/${this.repo}/labels`;
+    // Siempre intenta crear — si el label ya existe GitHub retorna 422,
+    // que ignoramos. Así evitamos el GET previo que falla con labels que
+    // tienen slashes en el path URL.
     try {
-      await this._fetch(`${url}/${encodeURIComponent(labelName)}`);
-    } catch {
+      const url = `${API_BASE}/repos/${this.owner}/${this.repo}/labels`;
       await this._fetch(url, {
         method: 'POST',
         body: JSON.stringify({ name: labelName, color: '6f42c1' }),
       });
+    } catch {
+      // 422 = ya existe, cualquier otro error = no crítico
     }
   }
 
