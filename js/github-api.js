@@ -91,7 +91,8 @@ export class GitHubApi {
     const data = await this._cachedGet(`file:${path}:${branch}`,
       `${API_BASE}/repos/${this.owner}/${this.repo}/contents/${path}${ref}`);
 
-    return atob(data.content.replace(/\n/g, ''));
+    const bytes = Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
   }
 
   // ─── Issues ────────────────────────────────────────────────
